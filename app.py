@@ -1,291 +1,137 @@
+"""Streamlit web app for the CSV analysis agent."""
 
-import os
+import io
 import json
+import os
 
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
-from google import genai
 
-from tools import (
-    dataset_overview,
-    filter_data,
-    calculate_statistics,
-    group_analysis,
-    correlation_analysis,
-)
+from agent import MODELS, DataAgent
 
 load_dotenv()
 
-st.set_page_config(
-    page_title="CSV Analysis Agent",
-    page_icon="📊",
-    layout="wide",
-)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SAMPLE_DATASETS = {
+    "Students (6 rows)": os.path.join(BASE_DIR, "sample_data", "students.csv"),
+    "Stationery sales (150 rows)": os.path.join(BASE_DIR, "sample_data", "sales.csv"),
+}
+
+st.set_page_config(page_title="CSV Analysis Agent", page_icon="📊", layout="wide")
+
+
+@st.cache_data
+def read_csv(data: bytes) -> pd.DataFrame:
+    """Read CSV bytes, falling back to Latin-1 for files that aren't UTF-8."""
+    try:
+        return pd.read_csv(io.BytesIO(data))
+    except UnicodeDecodeError:
+        return pd.read_csv(io.BytesIO(data), encoding="latin-1")
+
+
+def show_message(message):
+    """Draw one chat message, plus the tool calls behind an answer."""
+    with st.chat_message(message["role"]):
+        # "$" would otherwise be read as the start of a maths formula.
+        st.markdown(message["content"].replace("$", "\\$"))
+
+        if message["role"] != "assistant":
+            return
+        steps = message.get("steps", [])
+        if message.get("model"):
+            st.caption(f"Answered by {message['model']}")
+        if not steps:
+            st.caption("⚠️ No tools were used for this answer.")
+            return
+
+        with st.expander(f"🔧 {len(steps)} tool call(s): how the agent got this answer"):
+            for number, step in enumerate(steps, start=1):
+                st.markdown(f"**{number}. `{step['tool']}`**")
+                st.code(json.dumps(step["args"], indent=2), language="json")
+                result = step["result"] or {}
+                if "error" in result:
+                    st.error(f"Tool error (sent back to the agent): {result['error']}")
+                else:
+                    text = json.dumps(result.get("result"), indent=2, default=str)
+                    if len(text) > 3000:
+                        text = text[:3000] + "\n... (truncated)"
+                    st.code(text, language="json")
+
 
 st.title("📊 CSV Analysis Agent")
 st.write(
-    "Upload a CSV file, ask a question, and let Gemini "
-    "choose the appropriate data-analysis tool."
+    "Upload a CSV and ask questions in plain English. The agent answers by "
+    "calling real pandas tools, and every step it took is shown under its answer."
 )
 
+with st.sidebar:
+    st.header("⚙️ Settings")
+    user_key = st.text_input(
+        "Your Gemini API key (optional)",
+        type="password",
+        help="Leave empty to use the app's key. Get a free key at aistudio.google.com.",
+    )
+    st.caption(f"Models (tried in order): {', '.join(MODELS)}")
 
-def make_json_safe(result):
-    """Convert tool results into values Gemini can understand."""
-    if isinstance(result, pd.DataFrame):
-        return {
-            "columns": [str(c) for c in result.columns],
-            "rows": json.loads(
-                result.to_json(orient="records", default_handler=str)
-            ),
-        }
+# ---------- choose a dataset ----------
 
-    if isinstance(result, pd.Series):
-        return result.to_dict()
-
-    if hasattr(result, "item"):
-        return result.item()
-
-    if isinstance(result, dict):
-        return {
-            str(k): make_json_safe(v)
-            for k, v in result.items()
-        }
-
-    if isinstance(result, (list, tuple)):
-        return [make_json_safe(v) for v in result]
-
-    return result
-
-
-uploaded_file = st.file_uploader(
-    "Upload your CSV file",
-    type=["csv"],
-)
-
-if uploaded_file is not None:
-    try:
-        df = pd.read_csv(uploaded_file)
-
-        st.success("CSV uploaded successfully!")
-
-        st.subheader("Dataset Preview")
-        st.dataframe(df.head(10), use_container_width=True)
-
-        col1, col2 = st.columns(2)
-        col1.metric("Rows", len(df))
-        col2.metric("Columns", len(df.columns))
-
-        st.write("**Column names:**", ", ".join(map(str, df.columns)))
-
-        # Functions available for Gemini to call.
-        # Each function uses the uploaded DataFrame.
-
-        def overview_tool() -> dict:
-            """Show dataset row count, column count, column types,
-            and missing values."""
-            return make_json_safe(dataset_overview(df))
-
-        def statistics_tool(column: str) -> dict:
-            """Calculate count, mean, median, minimum and maximum
-            for a numeric column. The column must be an exact
-            column name from the uploaded dataset."""
-            if column not in df.columns:
-                raise ValueError(f"Unknown column: {column}")
-            return make_json_safe(calculate_statistics(df, column))
-
-        def filter_tool(
-            column: str,
-            operator: str,
-            value: str,
-        ) -> dict:
-            """Filter dataset rows. Supported operators are equals,
-            contains, >, <, >= and <=. Use an exact column name.
-            The value is the value to compare against."""
-            if column not in df.columns:
-                raise ValueError(f"Unknown column: {column}")
-
-            result = filter_data(df, column, operator, value)
-            return make_json_safe(result)
-
-        def group_tool(
-            category: str,
-            value: str,
-            operation: str = "mean",
-        ) -> dict:
-            """Group data by a category column and calculate mean,
-            sum or count for a value column. Use exact column names."""
-            if category not in df.columns:
-                raise ValueError(f"Unknown category column: {category}")
-            if value not in df.columns:
-                raise ValueError(f"Unknown value column: {value}")
-            if operation not in ["mean", "sum", "count"]:
-                raise ValueError("Operation must be mean, sum or count")
-
-            result = group_analysis(df, category, value, operation)
-            return make_json_safe(result)
-
-        def correlation_tool() -> dict:
-            """Calculate the correlation matrix for numeric columns."""
-            return make_json_safe(correlation_analysis(df))
-
-        st.subheader("Ask a question about your data")
-
-        question = st.text_input(
-            "Your question",
-            placeholder="Which subject has the highest average marks?",
-        )
-
-        if st.button("Ask AI", type="primary"):
-            api_key = os.getenv("GEMINI_API_KEY")
-
-            if not api_key:
-                st.error(
-                    "Gemini API key not found. Add GEMINI_API_KEY "
-                    "to your .env file and restart the app."
-                )
-
-            elif not question.strip():
-                st.warning("Please enter a question first.")
-
-            else:
-                try:
-                    client = genai.Client(api_key=api_key)
-
-                    with st.spinner("Gemini is analysing your data..."):
-                        response = client.models.generate_content(
-                            model="gemini-2.5-flash",
-                            contents=(
-                                "You are a CSV analysis agent. Answer "
-                                "questions using the supplied tools. "
-                                "Use actual tool results for calculations; "
-                                "never invent statistics. Use exact dataset "
-                                "column names. Explain results simply.\n\n"
-                                f"Dataset columns: {list(df.columns)}\n"
-                                f"User question: {question}"
-                            ),
-                            config={
-                                "tools": [
-                                    overview_tool,
-                                    statistics_tool,
-                                    filter_tool,
-                                    group_tool,
-                                    correlation_tool,
-                                ],
-                            },
-                        )
-
-                    if response.text:
-                        st.subheader("AI Answer")
-                        st.markdown(response.text)
-                    else:
-                        st.warning(
-                            "Gemini returned no text. Try rephrasing "
-                            "your question."
-                        )
-
-                except Exception as error:
-                    st.error(f"Gemini request failed: {error}")
-
-        # Manual tool testing is also available.
-        with st.expander("Explore analysis tools manually"):
-            choice = st.selectbox(
-                "Choose an analysis tool",
-                [
-                    "Dataset Overview",
-                    "Calculate Statistics",
-                    "Filter Data",
-                    "Group Analysis",
-                    "Correlation Analysis",
-                ],
-            )
-
-            if choice == "Dataset Overview":
-                if st.button("Show Dataset Overview"):
-                    st.json(make_json_safe(dataset_overview(df)))
-
-            elif choice == "Calculate Statistics":
-                numeric_columns = list(
-                    df.select_dtypes(include="number").columns
-                )
-                if numeric_columns:
-                    column = st.selectbox(
-                        "Numeric column",
-                        numeric_columns,
-                        key="stats_column",
-                    )
-                    if st.button("Calculate Statistics"):
-                        st.json(
-                            make_json_safe(
-                                calculate_statistics(df, column)
-                            )
-                        )
-                else:
-                    st.info("No numeric columns found.")
-
-            elif choice == "Filter Data":
-                column = st.selectbox(
-                    "Column to filter",
-                    list(df.columns),
-                    key="filter_column",
-                )
-                operator = st.selectbox(
-                    "Condition",
-                    ["equals", "contains", ">", "<", ">=", "<="],
-                )
-                value = st.text_input(
-                    "Comparison value",
-                    key="filter_value",
-                )
-
-                if st.button("Filter Rows"):
-                    try:
-                        result = filter_data(
-                            df, column, operator, value
-                        )
-                        st.dataframe(
-                            result, use_container_width=True
-                        )
-                    except Exception as error:
-                        st.error(str(error))
-
-            elif choice == "Group Analysis":
-                category = st.selectbox(
-                    "Group by",
-                    list(df.columns),
-                    key="group_category",
-                )
-                value_column = st.selectbox(
-                    "Value column",
-                    list(df.columns),
-                    key="group_value",
-                )
-                operation = st.selectbox(
-                    "Operation",
-                    ["mean", "sum", "count"],
-                )
-
-                if st.button("Run Group Analysis"):
-                    try:
-                        result = group_analysis(
-                            df, category, value_column, operation
-                        )
-                        st.write(result)
-                    except Exception as error:
-                        st.error(str(error))
-
-            elif choice == "Correlation Analysis":
-                if st.button("Calculate Correlations"):
-                    try:
-                        st.dataframe(
-                            correlation_analysis(df),
-                            use_container_width=True,
-                        )
-                    except Exception as error:
-                        st.error(str(error))
-
-    except Exception as error:
-        st.error(f"Could not read the CSV file: {error}")
-
+data, dataset_name = None, None
+source = st.radio("Data source", ["Upload a CSV", "Use a sample dataset"], horizontal=True)
+if source == "Upload a CSV":
+    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+    if uploaded_file is not None:
+        data, dataset_name = uploaded_file.getvalue(), uploaded_file.name
 else:
-    st.info("Upload a CSV file to get started.")
+    choice = st.selectbox("Sample dataset", list(SAMPLE_DATASETS))
+    with open(SAMPLE_DATASETS[choice], "rb") as file:
+        data, dataset_name = file.read(), choice
+
+if data is None:
+    st.info("Upload a CSV file (or pick a sample dataset) to get started.")
+    st.stop()
+
+try:
+    df = read_csv(data)
+except Exception as error:
+    st.error(f"Could not read the CSV file: {error}")
+    st.stop()
+
+# Start a fresh chat whenever a different dataset is loaded.
+dataset_key = f"{dataset_name}-{len(data)}"
+if st.session_state.get("dataset_key") != dataset_key:
+    st.session_state.dataset_key = dataset_key
+    st.session_state.messages = []
+
+with st.expander(f"Preview: {dataset_name}  ({len(df)} rows × {len(df.columns)} columns)"):
+    st.dataframe(df.head(20), width="stretch")
+
+# ---------- chat ----------
+
+for message in st.session_state.messages:
+    show_message(message)
+
+question = st.chat_input("Ask a question, e.g. Which group has the highest average?")
+if question:
+    api_key = user_key or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        st.error("No Gemini API key found. Add GEMINI_API_KEY to your .env file, or paste a key in the sidebar.")
+        st.stop()
+
+    history = list(st.session_state.messages)
+    st.session_state.messages.append({"role": "user", "content": question})
+    show_message(st.session_state.messages[-1])
+
+    with st.spinner("Analysing..."):
+        try:
+            result = DataAgent(df, api_key).ask(question, history)
+        except Exception as error:
+            result = {"answer": f"❌ The request failed: {error}", "steps": [], "model": None}
+
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": result["answer"],
+        "steps": result["steps"],
+        "model": result["model"],
+    })
+    st.rerun()
