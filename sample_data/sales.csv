@@ -1,0 +1,151 @@
+Order_ID,Date,Month,Region,Salesperson,Product,Units,Unit_Price
+1001,2026-01-01,2026-01,East,Rohan,Notebook,15,57.0
+1002,2026-01-02,2026-01,West,Dev,Backpack,1,807.5
+1003,2026-01-03,2026-01,West,Tanya,Geometry Box,17,114.0
+1004,2026-01-04,2026-01,North,Vikram,Calculator,6,450.0
+1005,2026-01-05,2026-01,North,Vikram,Pen,49,13.5
+1006,2026-01-05,2026-01,North,Asha,Notebook,37,54.0
+1007,2026-01-06,2026-01,North,Vikram,Calculator,5,450.0
+1008,2026-01-07,2026-01,North,Vikram,Calculator,5,450.0
+1009,2026-01-09,2026-01,North,Asha,Geometry Box,,114.0
+1010,2026-01-09,2026-01,South,Meera,Backpack,2,850.0
+1011,2026-01-13,2026-01,East,Isha,Notebook,17,60.0
+1012,2026-01-15,2026-01,West,Dev,Pen,71,15.0
+1013,2026-01-16,2026-01,North,Asha,Backpack,2,765.0
+1014,2026-01-17,2026-01,North,Asha,Geometry Box,4,120.0
+1015,2026-01-18,2026-01,North,Vikram,Notebook,28,57.0
+1016,2026-01-20,2026-01,South,Meera,Notebook,19,60.0
+1017,2026-01-20,2026-01,South,Karan,Notebook,17,54.0
+1018,2026-01-21,2026-01,East,Isha,Notebook,400,54.0
+1019,2026-01-22,2026-01,East,Rohan,Geometry Box,12,120.0
+1020,2026-01-23,2026-01,North,Asha,Backpack,8,765.0
+1021,2026-01-23,2026-01,East,Isha,Geometry Box,9,108.0
+1022,2026-01-23,2026-01,North,Vikram,Geometry Box,11,120.0
+1023,2026-01-24,2026-01,East,Isha,Pen,61,14.25
+1024,2026-01-24,2026-01,South,Karan,Pen,58,14.25
+1025,2026-01-24,2026-01,West,Dev,Notebook,33,54.0
+1026,2026-01-26,2026-01,West,Dev,Calculator,6,427.5
+1027,2026-01-26,2026-01,North,Asha,Calculator,11,450.0
+1028,2026-01-27,2026-01,North,Vikram,Notebook,28,60.0
+1029,2026-01-28,2026-01,South,Meera,Calculator,8,427.5
+1030,2026-01-28,2026-01,South,Karan,Pen,59,15.0
+1031,2026-01-30,2026-01,North,Asha,Backpack,6,807.5
+1032,2026-02-01,2026-02,South,Karan,Notebook,21,57.0
+1033,2026-02-02,2026-02,East,Rohan,Pen,59,15.0
+1034,2026-02-02,2026-02,East,Isha,Notebook,20,54.0
+1035,2026-02-05,2026-02,North,Asha,Notebook,27,54.0
+1036,2026-02-06,2026-02,North,Vikram,Geometry Box,7,114.0
+1037,2026-02-06,2026-02,South,Karan,Geometry Box,7,120.0
+1038,2026-02-10,2026-02,East,Isha,Geometry Box,12,108.0
+1039,2026-02-11,2026-02,North,Asha,Notebook,24,57.0
+1040,2026-02-11,2026-02,North,Asha,Backpack,2,850.0
+1041,2026-02-12,2026-02,South,Karan,Pen,56,13.5
+1042,2026-02-13,2026-02,North,Asha,Geometry Box,15,114.0
+1043,2026-02-14,2026-02,South,Karan,Geometry Box,15,114.0
+1044,2026-02-16,2026-02,West,Tanya,Backpack,2,807.5
+1045,2026-02-17,2026-02,West,Dev,Backpack,5,765.0
+1046,2026-02-20,2026-02,West,Dev,Geometry Box,,120.0
+1047,2026-02-20,2026-02,North,Vikram,Notebook,26,57.0
+1048,2026-02-20,2026-02,South,Karan,Notebook,21,54.0
+1049,2026-02-21,2026-02,North,Asha,Backpack,5,807.5
+1050,2026-02-22,2026-02,West,Dev,Notebook,24,60.0
+1051,2026-02-23,2026-02,South,Karan,Geometry Box,17,114.0
+1052,2026-02-24,2026-02,West,Tanya,Geometry Box,16,108.0
+1053,2026-02-24,2026-02,West,Tanya,Geometry Box,5,114.0
+1054,2026-02-24,2026-02,South,Meera,Geometry Box,13,120.0
+1055,2026-02-26,2026-02,South,Karan,Calculator,6,450.0
+1056,2026-02-26,2026-02,West,Dev,Notebook,27,54.0
+1057,2026-02-26,2026-02,South,Karan,Calculator,4,427.5
+1058,2026-02-27,2026-02,North,Asha,Pen,51,14.25
+1059,2026-02-27,2026-02,South,Karan,Geometry Box,15,108.0
+1060,2026-02-27,2026-02,South,Karan,Backpack,8,850.0
+1061,2026-02-27,2026-02,North,Asha,Notebook,30,60.0
+1062,2026-02-28,2026-02,West,Tanya,Calculator,6,427.5
+1063,2026-03-02,2026-03,North,Asha,Pen,67,13.5
+1064,2026-03-07,2026-03,West,Tanya,Geometry Box,13,108.0
+1065,2026-03-08,2026-03,South,Meera,Backpack,350,850.0
+1066,2026-03-09,2026-03,West,Dev,Backpack,6,807.5
+1067,2026-03-09,2026-03,North,Vikram,Pen,49,15.0
+1068,2026-03-10,2026-03,East,Isha,Backpack,4,850.0
+1069,2026-03-13,2026-03,North,Asha,Backpack,3,807.5
+1070,2026-03-16,2026-03,West,Tanya,Pen,68,15.0
+1071,2026-03-17,2026-03,North,Asha,Pen,64,15.0
+1072,2026-03-20,2026-03,East,Rohan,Pen,56,15.0
+1073,2026-03-20,2026-03,South,Meera,Geometry Box,17,120.0
+1074,2026-03-20,2026-03,East,Isha,Notebook,17,60.0
+1075,2026-03-25,2026-03,South,Karan,Notebook,27,60.0
+1076,2026-03-26,2026-03,East,Rohan,Pen,59,15.0
+1077,2026-03-30,2026-03,East,Rohan,Calculator,7,427.5
+1078,2026-04-01,2026-04,West,Dev,Geometry Box,10,108.0
+1079,2026-04-01,2026-04,East,Isha,Notebook,28,54.0
+1080,2026-04-02,2026-04,East,Rohan,Backpack,7,765.0
+1081,2026-04-03,2026-04,South,Karan,Geometry Box,10,108.0
+1082,2026-04-04,2026-04,South,Karan,Geometry Box,13,120.0
+1083,2026-04-04,2026-04,East,Isha,Backpack,4,850.0
+1084,2026-04-05,2026-04,South,Meera,Calculator,7,427.5
+1085,2026-04-07,2026-04,North,Vikram,Backpack,8,807.5
+1086,2026-04-09,2026-04,North,Vikram,Pen,62,13.5
+1087,2026-04-09,2026-04,East,Rohan,Notebook,30,54.0
+1088,2026-04-11,2026-04,West,Dev,Notebook,19,57.0
+1089,2026-04-11,2026-04,East,Rohan,Notebook,28,57.0
+1090,2026-04-13,2026-04,West,Dev,Notebook,28,57.0
+1091,2026-04-16,2026-04,South,Karan,Calculator,4,405.0
+1092,2026-04-19,2026-04,South,Meera,Notebook,25,54.0
+1093,2026-04-22,2026-04,West,Dev,Calculator,9,450.0
+1094,2026-04-23,2026-04,East,Isha,Pen,62,15.0
+1095,2026-04-25,2026-04,South,Meera,Backpack,3,807.5
+1096,2026-04-30,2026-04,North,Vikram,Calculator,7,405.0
+1097,2026-04-30,2026-04,South,Karan,Geometry Box,15,114.0
+1098,2026-04-30,2026-04,North,Asha,Pen,63,13.5
+1099,2026-05-01,2026-05,South,Karan,Backpack,6,807.5
+1100,2026-05-02,2026-05,West,Tanya,Notebook,,60.0
+1101,2026-05-03,2026-05,West,Dev,Calculator,5,427.5
+1102,2026-05-06,2026-05,East,Isha,Geometry Box,11,114.0
+1103,2026-05-10,2026-05,East,Isha,Backpack,8,850.0
+1104,2026-05-11,2026-05,South,Meera,Backpack,4,765.0
+1105,2026-05-12,2026-05,North,Asha,Pen,57,14.25
+1106,2026-05-13,2026-05,East,Rohan,Notebook,25,57.0
+1107,2026-05-14,2026-05,North,Asha,Calculator,9,427.5
+1108,2026-05-14,2026-05,West,Tanya,Geometry Box,12,114.0
+1109,2026-05-16,2026-05,North,Asha,Pen,62,14.25
+1110,2026-05-16,2026-05,East,Isha,Geometry Box,6,120.0
+1111,2026-05-16,2026-05,North,Asha,Calculator,2,405.0
+1112,2026-05-19,2026-05,North,Vikram,Pen,62,15.0
+1113,2026-05-20,2026-05,East,Rohan,Geometry Box,15,114.0
+1114,2026-05-20,2026-05,South,Karan,Backpack,7,807.5
+1115,2026-05-21,2026-05,East,Isha,Geometry Box,10,114.0
+1116,2026-05-26,2026-05,North,Asha,Backpack,1,807.5
+1117,2026-05-27,2026-05,North,Asha,Notebook,27,60.0
+1118,2026-05-30,2026-05,South,Karan,Notebook,34,57.0
+1119,2026-05-30,2026-05,East,Rohan,Notebook,26,54.0
+1120,2026-05-31,2026-05,South,Meera,Pen,67,15.0
+1121,2026-05-31,2026-05,South,Karan,Geometry Box,500,114.0
+1122,2026-06-03,2026-06,East,Rohan,Notebook,21,54.0
+1123,2026-06-06,2026-06,South,Karan,Backpack,2,807.5
+1124,2026-06-08,2026-06,East,Isha,Backpack,3,765.0
+1125,2026-06-10,2026-06,North,Vikram,Calculator,7,427.5
+1126,2026-06-11,2026-06,East,Isha,Backpack,3,807.5
+1127,2026-06-11,2026-06,South,Karan,Calculator,5,427.5
+1128,2026-06-11,2026-06,West,Dev,Geometry Box,18,114.0
+1129,2026-06-11,2026-06,North,Vikram,Geometry Box,7,120.0
+1130,2026-06-12,2026-06,East,Rohan,Notebook,30,54.0
+1131,2026-06-13,2026-06,West,Tanya,Pen,76,14.25
+1132,2026-06-15,2026-06,West,Dev,Notebook,26,57.0
+1133,2026-06-17,2026-06,East,Rohan,Notebook,29,60.0
+1134,2026-06-17,2026-06,South,Karan,Geometry Box,,114.0
+1135,2026-06-19,2026-06,West,Dev,Backpack,6,765.0
+1136,2026-06-19,2026-06,North,Asha,Calculator,5,427.5
+1137,2026-06-19,2026-06,South,Meera,Notebook,27,57.0
+1138,2026-06-19,2026-06,North,Vikram,Calculator,2,427.5
+1139,2026-06-21,2026-06,West,Dev,Backpack,6,765.0
+1140,2026-06-22,2026-06,East,Isha,Calculator,7,427.5
+1141,2026-06-22,2026-06,South,Meera,Geometry Box,5,120.0
+1142,2026-06-24,2026-06,North,Asha,Geometry Box,16,108.0
+1143,2026-06-25,2026-06,East,Rohan,Geometry Box,11,120.0
+1144,2026-06-25,2026-06,West,Tanya,Pen,56,14.25
+1145,2026-06-25,2026-06,West,Tanya,Pen,52,13.5
+1146,2026-06-26,2026-06,West,Tanya,Calculator,6,405.0
+1147,2026-06-26,2026-06,South,Meera,Pen,78,13.5
+1148,2026-06-29,2026-06,South,Meera,Geometry Box,10,108.0
+1149,2026-06-29,2026-06,West,Tanya,Calculator,9,450.0
+1150,2026-06-30,2026-06,West,Tanya,Geometry Box,16,120.0
