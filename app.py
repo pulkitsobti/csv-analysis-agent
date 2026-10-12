@@ -7,6 +7,7 @@ import os
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
+from google.genai import errors
 
 from agent import MODELS, DataAgent
 from memory import KINDS, MemoryStore
@@ -184,20 +185,40 @@ if question:
         st.error("No Gemini API key found. Add GEMINI_API_KEY to your .env file, or paste a key in the sidebar.")
         st.stop()
 
-    history = list(st.session_state.messages)
-    st.session_state.messages.append({"role": "user", "content": question})
-    show_message(st.session_state.messages[-1])
+    # Earlier question/answer pairs, for follow-up questions. Failed ones are
+    # skipped so error messages are never sent to Gemini as if it said them.
+    messages = st.session_state.messages
+    history = []
+    for asked, answered in zip(messages[0::2], messages[1::2]):
+        if not answered.get("failed"):
+            history += [asked, answered]
+
+    messages.append({"role": "user", "content": question})
+    show_message(messages[-1])
 
     with st.spinner("Analysing..."):
         try:
             result = DataAgent(df, api_key, memory).ask(question, history)
+        except errors.APIError as error:
+            if error.code == 429:
+                text = (
+                    "⏳ The free Gemini quota for today is used up on every model. "
+                    "Paste your own free API key in the sidebar "
+                    "(get one at aistudio.google.com/apikey), or try again later."
+                )
+            elif error.code in (400, 401, 403) and "key" in str(error).lower():
+                text = "🔑 That Gemini API key was rejected. Check the key and try again."
+            else:
+                text = f"❌ Gemini returned an error: {error}"
+            result = {"answer": text, "steps": [], "model": None, "failed": True}
         except Exception as error:
-            result = {"answer": f"❌ The request failed: {error}", "steps": [], "model": None}
+            result = {"answer": f"❌ Something went wrong: {error}", "steps": [], "model": None, "failed": True}
 
-    st.session_state.messages.append({
+    messages.append({
         "role": "assistant",
         "content": result["answer"],
         "steps": result["steps"],
         "model": result["model"],
+        "failed": result.get("failed", False),
     })
     st.rerun()

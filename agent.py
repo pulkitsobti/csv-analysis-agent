@@ -14,9 +14,12 @@ import tools
 
 # Models to try in order. If one is rate-limited or overloaded, the next is
 # used (each model has its own free-tier quota). Override with GEMINI_MODELS.
-MODELS = os.getenv(
-    "GEMINI_MODELS", "gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3.5-flash-lite"
-).split(",")
+MODELS = [
+    name.strip()
+    for name in os.getenv(
+        "GEMINI_MODELS", "gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3.5-flash-lite"
+    ).split(",")
+]
 MAX_TOOL_CALLS = 12
 
 SYSTEM_PROMPT = """You are a data analysis agent working on a CSV file the user uploaded.
@@ -223,7 +226,7 @@ class DataAgent:
         for model in MODELS:
             self.reset()  # undo anything a failed attempt changed
             chat = self.client.chats.create(
-                model=model.strip(),
+                model=model,
                 history=earlier,
                 config=types.GenerateContentConfig(
                     system_instruction=self.system_prompt(),
