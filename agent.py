@@ -36,10 +36,24 @@ Rules:
 7. Keep answers short and clear. Mention which analysis each number came from.
 """
 
+MEMORY_PROMPT = """
+Memory (facts saved in earlier sessions are listed at the end):
+- Apply saved memories when relevant, e.g. use a saved definition or filter instead
+  of guessing what a term means, and say which memory you used.
+- Call save_memory when the user asks you to remember something, defines a term or
+  metric, corrects you, or names a filter they want to reuse. Never save one-off
+  answers, raw rows or whole results.
+- If a new fact conflicts with a saved memory, save it under the SAME name so it
+  replaces the old one, and tell the user what changed.
+- Call forget_memory when the user asks you to forget something.
+"""
+
 
 class DataAgent:
-    def __init__(self, df, api_key):
+    def __init__(self, df, api_key, memory=None):
         self.original_df = df
+        self.columns = list(df.columns)
+        self.memory = memory  # a MemoryStore, or None to turn memory off
         self.reset()
         # Retry once on temporary server errors. Rate limits (429) are not
         # retried here; ask() moves on to the next model instead.
@@ -152,7 +166,21 @@ class DataAgent:
                 "statistics": tools.column_statistics(agent.df, new_column),
             }
 
-        return [
+        def save_memory(name: str, kind: str, content: str, scope: str = "dataset") -> dict:
+            """Save a fact for future sessions.
+            name: short snake_case name, e.g. good_attendance.
+            kind: definition, correction, filter or preference.
+            content: the fact in one short sentence using exact column names,
+            e.g. 'revenue = Units multiply Unit_Price' or 'Attendance >= 90'.
+            scope: 'dataset' (only datasets with these columns) or 'global' (all datasets).
+            Saving under an existing name replaces that memory."""
+            return agent.memory.save(name, kind, content, scope, agent.columns)
+
+        def forget_memory(name: str) -> dict:
+            """Delete a saved memory by name, when the user asks you to forget it."""
+            return agent.memory.forget(name, agent.columns)
+
+        analysis_tools = [
             dataset_overview,
             filter_rows,
             column_statistics,
@@ -163,6 +191,9 @@ class DataAgent:
             find_outliers,
             add_calculated_column,
         ]
+        if self.memory is None:
+            return analysis_tools
+        return analysis_tools + [save_memory, forget_memory]
 
     # ---------- running a question ----------
 
@@ -173,7 +204,10 @@ class DataAgent:
             f"- {name} ({self.df[name].dtype}), e.g. {[str(v) for v in self.df[name].dropna().unique()[:3]]}"
             for name in self.df.columns
         )
-        return SYSTEM_PROMPT + f"\nDataset: {len(self.df)} rows.\nColumns:\n{schema}\n"
+        prompt = SYSTEM_PROMPT + f"\nDataset: {len(self.df)} rows.\nColumns:\n{schema}\n"
+        if self.memory is not None:
+            prompt += MEMORY_PROMPT + "\nSaved memories:\n" + self.memory.as_prompt_text(self.columns) + "\n"
+        return prompt
 
     def ask(self, question, history=()):
         """Answer a question. `history` is a list of earlier chat messages

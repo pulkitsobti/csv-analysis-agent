@@ -9,10 +9,12 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from agent import MODELS, DataAgent
+from memory import KINDS, MemoryStore
 
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MEMORY_PATH = os.path.join(BASE_DIR, "memory.json")
 SAMPLE_DATASETS = {
     "Students (6 rows)": os.path.join(BASE_DIR, "sample_data", "students.csv"),
     "Stationery sales (150 rows)": os.path.join(BASE_DIR, "sample_data", "sales.csv"),
@@ -59,6 +61,65 @@ def show_message(message):
                     st.code(text, language="json")
 
 
+def memory_sidebar(memory, columns):
+    """Let the user see, add and delete what the agent remembers."""
+    with st.sidebar:
+        st.header("🧠 Memory")
+        st.caption(
+            "Facts the agent keeps between sessions (saved in memory.json). "
+            "Ask it to remember or forget something, or manage them here."
+        )
+
+        active = memory.relevant(columns)
+        if not active:
+            st.info(
+                "No memories for this dataset yet. Try asking: "
+                "\"Remember that 'good attendance' means Attendance >= 90.\""
+            )
+        for item in active:
+            with st.container(border=True):
+                st.markdown(f"**{item['name']}** · `{item['kind']}` · {item['scope']}")
+                st.write(item["content"])
+                note = f"Updated {item['updated_at'][:10]}"
+                if item["history"]:
+                    note += f" · replaced {len(item['history'])} older version(s)"
+                if memory.is_stale(item):
+                    note += " · ⚠️ may be stale"
+                st.caption(note)
+                if item["history"]:
+                    with st.expander("Older versions"):
+                        for old in reversed(item["history"]):
+                            st.caption(f"{old['replaced_at'][:10]}: {old['content']}")
+                if st.button("Delete", key=f"delete-{item['scope_id']}-{item['name']}"):
+                    memory.delete(item["name"], item["scope_id"])
+                    st.rerun()
+
+        hidden = len(memory.memories) - len(active)
+        if hidden > 0:
+            st.caption(f"{hidden} more memory/memories belong to other datasets.")
+
+        with st.expander("➕ Add a memory"):
+            with st.form("add-memory", clear_on_submit=True):
+                name = st.text_input("Name", placeholder="good_attendance")
+                kind = st.selectbox("Kind", KINDS)
+                content = st.text_input("Fact", placeholder="Attendance >= 90")
+                scopes = ["dataset", "global"] if columns else ["global"]
+                scope = st.radio("Applies to", scopes, horizontal=True)
+                if st.form_submit_button("Save"):
+                    try:
+                        memory.save(name, kind, content, scope, columns)
+                        st.rerun()
+                    except ValueError as error:
+                        st.error(str(error))
+
+        if memory.memories:
+            with st.expander("🗑️ Clear all memory"):
+                sure = st.checkbox("Yes, delete every saved memory")
+                if st.button("Clear all", disabled=not sure):
+                    memory.clear()
+                    st.rerun()
+
+
 st.title("📊 CSV Analysis Agent")
 st.write(
     "Upload a CSV and ask questions in plain English. The agent answers by "
@@ -74,6 +135,8 @@ with st.sidebar:
     )
     st.caption(f"Models (tried in order): {', '.join(MODELS)}")
 
+memory = MemoryStore(MEMORY_PATH)
+
 # ---------- choose a dataset ----------
 
 data, dataset_name = None, None
@@ -88,6 +151,7 @@ else:
         data, dataset_name = file.read(), choice
 
 if data is None:
+    memory_sidebar(memory, [])
     st.info("Upload a CSV file (or pick a sample dataset) to get started.")
     st.stop()
 
@@ -96,6 +160,8 @@ try:
 except Exception as error:
     st.error(f"Could not read the CSV file: {error}")
     st.stop()
+
+memory_sidebar(memory, list(df.columns))
 
 # Start a fresh chat whenever a different dataset is loaded.
 dataset_key = f"{dataset_name}-{len(data)}"
@@ -124,7 +190,7 @@ if question:
 
     with st.spinner("Analysing..."):
         try:
-            result = DataAgent(df, api_key).ask(question, history)
+            result = DataAgent(df, api_key, memory).ask(question, history)
         except Exception as error:
             result = {"answer": f"❌ The request failed: {error}", "steps": [], "model": None}
 

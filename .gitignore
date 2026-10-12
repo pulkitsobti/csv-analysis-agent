@@ -3,3 +3,5 @@
 __pycache__/
 .env
 *.pyc
+memory.json
+memory.json.*
