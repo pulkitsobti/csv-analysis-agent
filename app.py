@@ -9,6 +9,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from google.genai import errors
 
+import tools
 from agent import MODELS, DataAgent
 from memory import KINDS, MemoryStore
 
@@ -60,6 +61,72 @@ def show_message(message):
                     if len(text) > 3000:
                         text = text[:3000] + "\n... (truncated)"
                     st.code(text, language="json")
+
+
+def manual_tools_panel(df):
+    """Run any analysis tool directly, without the AI (no Gemini requests)."""
+    columns = list(df.columns)
+    numeric = list(df.select_dtypes(include="number").columns) or columns
+
+    with st.expander("🛠️ Test the tools yourself (no AI, no quota used)"):
+        tool = st.selectbox("Tool", [
+            "1. dataset_overview",
+            "2. filter_rows",
+            "3. column_statistics",
+            "4. group_and_aggregate",
+            "5. correlations",
+            "6. top_rows",
+            "7. value_counts",
+            "8. find_outliers",
+            "9. calculate_column",
+        ])
+
+        # Each branch shows that tool's inputs and stores the call in `run`,
+        # which only happens when the button is pressed.
+        if tool == "1. dataset_overview":
+            run = lambda: tools.dataset_overview(df)
+        elif tool == "2. filter_rows":
+            column = st.selectbox("Column", columns, key="filter_column")
+            operator = st.selectbox("Operator", ["equals", "not_equals", "contains", ">", "<", ">=", "<="])
+            value = st.text_input("Value", key="filter_value")
+            run = lambda: tools.filter_rows(df, column, operator, value)
+        elif tool == "3. column_statistics":
+            column = st.selectbox("Numeric column", numeric, key="stats_column")
+            run = lambda: tools.column_statistics(df, column)
+        elif tool == "4. group_and_aggregate":
+            group_by = st.selectbox("Group by", columns, key="group_by")
+            value_column = st.selectbox("Value column", numeric, key="group_value")
+            operation = st.selectbox("Operation", ["mean", "sum", "count", "min", "max", "median"])
+            run = lambda: tools.group_and_aggregate(df, group_by, value_column, operation)
+        elif tool == "5. correlations":
+            run = lambda: tools.correlations(df)
+        elif tool == "6. top_rows":
+            column = st.selectbox("Numeric column", numeric, key="top_column")
+            n = st.number_input("How many rows", min_value=1, max_value=20, value=3)
+            largest = st.radio("Order", ["Largest", "Smallest"], horizontal=True) == "Largest"
+            run = lambda: tools.top_rows(df, column, n, largest)
+        elif tool == "7. value_counts":
+            column = st.selectbox("Column", columns, key="count_column")
+            run = lambda: tools.value_counts(df, column)
+        elif tool == "8. find_outliers":
+            column = st.selectbox("Numeric column", numeric, key="outlier_column")
+            run = lambda: tools.find_outliers(df, column)
+        else:
+            column_a = st.selectbox("Column A", numeric, key="calc_a")
+            operation = st.selectbox("Operation", ["multiply", "add", "subtract", "divide"])
+            column_b = st.text_input("Column B or a number", value=numeric[-1], key="calc_b")
+            run = lambda: df.assign(result=tools.calculate_column(df, column_a, operation, column_b))
+
+        if st.button("Run tool"):
+            try:
+                result = run()
+                if isinstance(result, pd.DataFrame):
+                    st.write(f"{len(result)} row(s)")
+                    st.dataframe(result.head(50), width="stretch")
+                else:
+                    st.json(result)
+            except ValueError as error:
+                st.error(str(error))
 
 
 def memory_sidebar(memory, columns):
@@ -172,6 +239,8 @@ if st.session_state.get("dataset_key") != dataset_key:
 
 with st.expander(f"Preview: {dataset_name}  ({len(df)} rows × {len(df.columns)} columns)"):
     st.dataframe(df.head(20), width="stretch")
+
+manual_tools_panel(df)
 
 # ---------- chat ----------
 
