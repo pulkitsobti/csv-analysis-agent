@@ -103,7 +103,7 @@ At the start of each question, the relevant memories are put into the agent's in
 Requires Python 3.10+.
 
 ```bash
-git clone <this repo>
+git clone https://github.com/pulkitsobti/csv-analysis-agent.git
 cd csv-analysis-agent
 python -m venv .venv
 .venv\Scripts\activate          # Windows  (macOS/Linux: source .venv/bin/activate)
