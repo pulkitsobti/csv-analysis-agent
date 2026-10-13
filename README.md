@@ -14,7 +14,7 @@ It also has **persistent memory**: it remembers definitions, corrections and nam
 
 | Part | What is used |
 |---|---|
-| Language model | Google Gemini via the `google-genai` Python SDK: `gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`. The model picked in the sidebar is tried first; the others are backups if it is busy or out of quota |
+| Language model | Google Gemini via the `google-genai` Python SDK: `gemini-3.5-flash-lite` (default), `gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`. The model picked in the sidebar is tried first; the others are backups if it is busy or out of quota |
 | Tool calling | Gemini function calling, with the SDK's automatic function-calling loop |
 | Data analysis | pandas |
 | Web app | Streamlit |
