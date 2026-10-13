@@ -201,7 +201,12 @@ with st.sidebar:
         type="password",
         help="Leave empty to use the app's key. Get a free key at aistudio.google.com.",
     )
-    st.caption(f"Models (tried in order): {', '.join(MODELS)}")
+    chosen_model = st.selectbox(
+        "AI model",
+        MODELS,
+        help="This model is tried first. If it is busy or out of free quota, the others are used as backups.",
+    )
+    st.caption("Lite models are faster and have their own free quota, but may make more mistakes.")
 
 memory = MemoryStore(MEMORY_PATH)
 
@@ -267,7 +272,7 @@ if question:
 
     with st.spinner("Analysing..."):
         try:
-            result = DataAgent(df, api_key, memory).ask(question, history)
+            result = DataAgent(df, api_key, memory).ask(question, history, chosen_model)
         except errors.APIError as error:
             if error.code == 429:
                 text = (

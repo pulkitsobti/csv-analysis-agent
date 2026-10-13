@@ -212,9 +212,10 @@ class DataAgent:
             prompt += MEMORY_PROMPT + "\nSaved memories:\n" + self.memory.as_prompt_text(self.columns) + "\n"
         return prompt
 
-    def ask(self, question, history=()):
+    def ask(self, question, history=(), first_model=None):
         """Answer a question. `history` is a list of earlier chat messages
         ({"role": "user" | "assistant", "content": str}) for follow-up questions.
+        `first_model` is tried first; the other models in MODELS are backups.
 
         Returns {"answer": str, "steps": [{"tool", "args", "result"}, ...], "model": str}.
         """
@@ -223,7 +224,11 @@ class DataAgent:
             role = "user" if message["role"] == "user" else "model"
             earlier.append(types.Content(role=role, parts=[types.Part(text=message["content"])]))
 
-        for model in MODELS:
+        models = list(MODELS)
+        if first_model:
+            models = [first_model] + [m for m in MODELS if m != first_model]
+
+        for model in models:
             self.reset()  # undo anything a failed attempt changed
             chat = self.client.chats.create(
                 model=model,
@@ -244,7 +249,7 @@ class DataAgent:
                 break
             except errors.APIError as error:
                 rate_limited_or_busy = error.code in (429, 500, 503, 504)
-                if not rate_limited_or_busy or model == MODELS[-1]:
+                if not rate_limited_or_busy or model == models[-1]:
                     raise
 
         answer = response.text
