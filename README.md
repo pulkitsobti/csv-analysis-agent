@@ -6,7 +6,7 @@ It also has **persistent memory**: it remembers definitions, corrections and nam
 
 > Submission for the BYTE MAIT Applied ML recruitment, **Task 1: The Agentic Task**.
 
-**Live app:** https://csv-analysis-agent-azjyqjb9faklyje57jakdr.streamlit.app/ · **Demo video:** https://youtu.be/APddOVZpxeE
+**Live app:** https://csv-analysis-agent-azjyqjb9faklyje57jakdr.streamlit.app/ · **Demo video:** [demo/demo.mp4](demo/demo.mp4) (4 min)
 
 ---
 
