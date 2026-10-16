@@ -10,19 +10,6 @@ BYTE MAIT Applied ML recruitment, **Task 1: The Agentic Task**.
 
 Python · pandas · Streamlit · Google Gemini API (`google-genai` SDK, function calling). Default model `gemini-3.5-flash-lite`; `gemini-3.8-flash`, `gemini-3.6-flash` and `gemini-3.5-flash` are backups if it is busy or out of quota. Memory is a local JSON file.
 
-## How it works
-
-```mermaid
-flowchart LR
-    Q[Question] --> A[agent.py]
-    A -- schema + memories + tools --> G[Gemini]
-    G -- tool call --> T[tools.py: pandas]
-    T -- result --> G
-    G -- answer + tool trace --> UI[app.py]
-```
-
-Gemini only sees the column names, a few example values and tool results, never the whole dataset, so every number comes from a real calculation. Tool errors go back to Gemini so it can fix the call.
-
 ## Tools
 
 | Tool | What it does |
